@@ -1,9 +1,9 @@
 import { Router } from "express";
 
-const viewsRoutes = Router();
+const viewsRouters = Router();
 
-viewsRoutes.get('/', (req, res) => {
+viewsRouters.get('/', (req, res) => {
     res.render('index');
 });
 
-export default viewsRoutes;
+export default viewsRouters;

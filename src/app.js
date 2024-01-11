@@ -1,37 +1,39 @@
-import express from "express";
-import handlebars from "express-handlebars";
-import viewsRoutes from "./routes/views.routes.js";
-import { Server } from "socket.io";
+import express from 'express';
+import { Server } from 'socket.io';
+import handlebars from 'express-handlebars';
+import viewsRouters from './routes/views.routes.js';
 
+
+const PORT = 8080;
 const app = express();
-const httpServer = app.listen(8080, () => {
-  console.log("Listening on " + 8080);
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
+app.use(express.static('public'));
+
+app.engine('handlebars', handlebars.engine());
+app.set('views', 'src/views');
+app.set('view engine', 'handlebars');
+
+app.use('/', viewsRouters);
+
+const httpServer = app.listen(PORT, () => {
+    console.log(`Listening on port ${PORT}`);
 });
 
 const io = new Server(httpServer);
-const messages = [];
-io.on('connection', (socket) => {
-    console.log('Nuevo socket conectado');
 
+const messages = [];
+
+io.on('connect', socket => {
+    console.log('Nuevo cliente conectado');
     socket.on('message', data => {
         messages.push(data);
-        io.emit('logMessages', messages);
+        io.emit('messageLogs', messages);
     });
 
-    socket.on('newUser', (data) => {
-      io.emit('newUserFound', data);
-    });
-
-    socket.on('user_new', data => {
-      socket.broadcast.emit('newConnection', data);
+    socket.on('newUser', user => {
+        io.emit('newConnection', 'Un nuevo usuario se conectó');
+        socket.broadcast.emit('notification', user);
     });
 });
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static("public"));
-app.engine("handlebars", handlebars.engine());
-app.set("views", "src/views");
-app.set("view engine", "handlebars");
-
-app.use("/", viewsRoutes);
